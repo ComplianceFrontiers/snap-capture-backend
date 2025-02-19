@@ -17,8 +17,8 @@ load_dotenv()
 mongo_uri = os.getenv('MONGO_URI')
 # MongoDB setup
 client = MongoClient(mongo_uri)
-db = client.chessclub
-users_collection = db.users
+db = client.chessschool
+users_collection = db.snap-capture # type: ignore
 
 @app.route('/')
 def home():
@@ -85,30 +85,35 @@ def signup():
 @app.route('/signin', methods=['POST'])
 def signin():
     user_data = request.get_json()
-    if not user_data or 'email' not in user_data:
-        return jsonify({'error': 'Email is required.'}), 400
     
-    email = user_data.get('email')
+    # Ensure phone number is provided
+    if not user_data or 'phone' not in user_data:
+        return jsonify({'error': 'Phone number is required.'}), 400
     
-    # Check if user exists
-    existing_user = users_collection.find_one({'email': email})
-    if existing_user:
-        # Get the current timestamp in IST
-        us_time_zone = pytz.timezone('America/New_York')
-        current_timestamp = datetime.now(us_time_zone)
-        formatted_timestamp = current_timestamp.isoformat()
-        
-        # Update the user's document with the current timestamp
-        users_collection.update_many(
-            {'email': email},
-            {'$set': {'last_signin': formatted_timestamp}}
-        )
-        return jsonify({'success': True, 'message': 'Sign in successful.'}), 200
+    phone = user_data.get('phone')
+
+    # Get the current timestamp in IST
+    ist_time_zone = pytz.timezone('Asia/Kolkata')
+    current_timestamp = datetime.now(ist_time_zone).isoformat()
+
+    # Update `last_signin` for all matching users
+    update_result = users_collection.update_many(
+        {'phone': phone},
+        {'$set': {'last_signin': current_timestamp}}
+    )
+
+    # Find and return updated user records (excluding `_id` and `capture_datetime`)
+    matching_users = list(users_collection.find({'phone': phone}, {'_id': 0}))
+
+    if matching_users:
+        return jsonify({
+            'success': True,
+            'users': matching_users,
+            'message': 'Sign-in successful. Last sign-in time updated.'
+        }), 200
     else:
-        return jsonify({'error': 'Email not registered. Please sign up.'}), 404
-
-
-@app.route('/Club_users', methods=['GET'])
+        return jsonify({'error': 'No users found with this phone number.'}), 404
+@app.route('/users', methods=['GET'])
 def get_users():
     try:
         # Fetch all records from the collection, sorted by last_signin in descending order
