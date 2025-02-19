@@ -18,7 +18,7 @@ mongo_uri = os.getenv('MONGO_URI')
 # MongoDB setup
 client = MongoClient(mongo_uri)
 db = client.chessschool
-users_collection = db.snap-capture # type: ignore
+users_collection = db.snap_capture
 
 @app.route('/')
 def home():
