@@ -13,7 +13,7 @@ app = Flask(__name__)
 CORS(app)
 load_dotenv()
 
-# Get the MongoDB URI from the environment variable
+# Get the MongoDB URI from the environment variable 
 mongo_uri = os.getenv('MONGO_URI')
 # MongoDB setup
 client = MongoClient(mongo_uri)
