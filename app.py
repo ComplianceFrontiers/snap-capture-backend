@@ -104,9 +104,9 @@ def signin():
 
     if matching_users:
         # Update `last_signin` only for exact matches
-        users_collection.update_many(
-            {'phone': phone}, {'$set': {'last_signin': current_timestamp}}
-        )
+        # users_collection.update_many(
+        #     {'phone': phone}, {'$set': {'last_signin': current_timestamp}}
+        # )
 
         return jsonify({
             'success': True,
