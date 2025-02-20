@@ -135,6 +135,29 @@ def upload_profile_pic():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+
+@app.route('/today_logins', methods=['GET'])
+def today_logins():
+    try:
+        start_of_day = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_day = datetime.utcnow().replace(hour=23, minute=59, second=59, microsecond=999999)
+
+        today_users = users_collection.find({"last_signin": {"$gte": start_of_day, "$lte": end_of_day}})
+        
+        users_list = []
+        for user in today_users:
+            users_list.append({
+                "user_id": user["user_id"],
+                "last_signin": user["last_signin"],
+                "profile_pic": user.get("profile_pic", None)  # Optional field
+            })
+
+        return jsonify({"success": True, "users": users_list}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 @app.route('/users', methods=['GET'])
 def get_users():
     try:
@@ -147,4 +170,4 @@ def get_users():
         return jsonify({"error": str(e)}), 500
     
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=80)
