@@ -4,7 +4,7 @@ from datetime import datetime
 from pymongo import MongoClient,DESCENDING
 from dotenv import load_dotenv
 import os
-import pytz
+import base64
 
 MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 1
@@ -121,10 +121,13 @@ def upload_profile_pic():
         if not user_id or not last_signin or not profile_pic:
             return jsonify({'error': 'User ID, last_signin, and profile picture are required.'}), 400
 
+        # 🔴 Convert bytes (image) to a Base64-encoded string
+        profile_pic_base64 = base64.b64encode(profile_pic.read()).decode('utf-8')
+
         # Update or insert user profile
         users_collection.update_one(
             {'user_id': user_id},
-            {'$set': {'last_signin': last_signin, 'profile_pic': profile_pic.read()}},
+            {'$set': {'last_signin': last_signin, 'profile_pic': profile_pic_base64}},
             upsert=True
         )
 
@@ -132,7 +135,6 @@ def upload_profile_pic():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-  
 @app.route('/users', methods=['GET'])
 def get_users():
     try:
