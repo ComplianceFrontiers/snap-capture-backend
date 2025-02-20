@@ -166,6 +166,29 @@ def today_logins():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/update_signin', methods=['POST'])
+def update_signin():
+    try:
+        data = request.get_json()
+        user_id = data.get("user_id")
+        signin_flag = data.get("signin")  # Boolean value (True/False)
+
+        if user_id is None or signin_flag is None:
+            return jsonify({"error": "Missing user_id or signin flag"}), 400
+
+        # Update the signin flag for the given user_id
+        result = users_collection.update_one(
+            {"user_id": user_id},
+            {"$set": {"signin": signin_flag}}
+        )
+
+        if result.matched_count == 0:
+            return jsonify({"error": "User not found"}), 404
+
+        return jsonify({"success": True, "message": "Signin flag updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/users', methods=['GET'])
 def get_users():
