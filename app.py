@@ -136,34 +136,33 @@ def upload_profile_pic():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-
 @app.route('/today_logins', methods=['GET'])
 def today_logins():
     try:
-        # Get date from request parameters
-        date_str = request.args.get("date", datetime.utcnow().strftime("%Y-%m-%d"))  # Default to today's date
-        selected_date = datetime.strptime(date_str, "%Y-%m-%d")
+        # Get date from request parameters (default to today's date in UTC)
+        date_str = request.args.get("date", datetime.utcnow().strftime("%Y-%m-%d"))  
 
-        # Define start and end of the selected date (UTC)
-        start_of_day = selected_date.replace(hour=0, minute=0, second=0, microsecond=0)
-        end_of_day = selected_date.replace(hour=23, minute=59, second=59, microsecond=999999)
-
+        # Query using regex to match timestamps that start with the given date
         today_users = users_collection.find({
-            "last_signin": {"$gte": start_of_day, "$lte": end_of_day}
+            "last_signin": {"$regex": f"^{date_str}"}
         })
 
-        users_list = []
-        for user in today_users:
-            users_list.append({
+        # Convert results to JSON
+        users_list = [
+            {
                 "user_id": user["user_id"],
                 "last_signin": user["last_signin"],
-                "profile_pic": user.get("profile_pic", None)  # Optional field
-            })
+                "profile_pic": user.get("profile_pic", None)
+            }
+            for user in today_users
+        ]
 
         return jsonify({"success": True, "users": users_list}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
 @app.route('/users', methods=['GET'])
 def get_users():
     try:
