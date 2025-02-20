@@ -153,6 +153,7 @@ def today_logins():
         users_list = [
             {
                 "user_id": user["user_id"],
+                "signin": user["signin"],
                 "first_name": user["first_name"],
                 "last_name": user["last_name"],
                 "last_signin": user["last_signin"],
