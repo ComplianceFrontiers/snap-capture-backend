@@ -145,7 +145,8 @@ def today_logins():
 
         # Query using regex to match timestamps that start with the given date
         today_users = users_collection.find({
-            "last_signin": {"$regex": f"^{date_str}"}
+            "last_signin": {"$regex": f"^{date_str}"},
+            "signin" : True
         })
 
         # Convert results to JSON
