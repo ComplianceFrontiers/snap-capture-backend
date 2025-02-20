@@ -117,6 +117,7 @@ def upload_profile_pic():
         user_id = request.form.get('user_id')
         last_signin = request.form.get('last_signin')  # Taking last_signin from request
         profile_pic = request.files.get('profile_pic')
+        signin = request.files.get('signin')
 
         if not user_id or not last_signin or not profile_pic:
             return jsonify({'error': 'User ID, last_signin, and profile picture are required.'}), 400
@@ -127,7 +128,7 @@ def upload_profile_pic():
         # Update or insert user profile
         users_collection.update_one(
             {'user_id': user_id},
-            {'$set': {'last_signin': last_signin, 'profile_pic': profile_pic_base64}},
+            {'$set': {'last_signin': last_signin, 'profile_pic': profile_pic_base64,'signin':signin}},
             upsert=True
         )
 
