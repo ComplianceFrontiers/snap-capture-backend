@@ -38,9 +38,6 @@ def signin():
 
     phone = user_data.get('phone')
 
-    # Get the current timestamp in IST
-    ist_time_zone = pytz.timezone('Asia/Kolkata')
-    current_timestamp = datetime.now(ist_time_zone).isoformat()
 
     # Search for users whose phone number contains the entered digits
     matching_users = list(users_collection.find(
@@ -49,11 +46,7 @@ def signin():
     ))
 
     if matching_users:
-        # Update `last_signin` only for exact matches
-        # users_collection.update_many(
-        #     {'phone': phone}, {'$set': {'last_signin': current_timestamp}}
-        # )
-
+       
         return jsonify({
             'success': True,
             'users': matching_users,
