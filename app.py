@@ -151,6 +151,8 @@ def today_logins():
         users_list = [
             {
                 "user_id": user["user_id"],
+                "first_name": user["first_name"],
+                "last_name": user["last_name"],
                 "last_signin": user["last_signin"],
                 "profile_pic": user.get("profile_pic", None)
             }
