@@ -27,6 +27,42 @@ def home():
 def time_now():
     return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
+
+@app.route('/signin', methods=['POST'])
+def signin():
+    user_data = request.get_json()
+
+    # Ensure phone number is provided
+    if not user_data or 'phone' not in user_data:
+        return jsonify({'error': 'Phone number is required.'}), 400
+
+    phone = user_data.get('phone')
+
+    # Get the current timestamp in IST
+    ist_time_zone = pytz.timezone('Asia/Kolkata')
+    current_timestamp = datetime.now(ist_time_zone).isoformat()
+
+    # Search for users whose phone number contains the entered digits
+    matching_users = list(users_collection.find(
+        {'phone': {'$regex': phone, '$options': 'i'}},  # Case-insensitive search
+        {'_id': 0}
+    ))
+
+    if matching_users:
+        # Update `last_signin` only for exact matches
+        # users_collection.update_many(
+        #     {'phone': phone}, {'$set': {'last_signin': current_timestamp}}
+        # )
+
+        return jsonify({
+            'success': True,
+            'users': matching_users,
+            'message': 'Matching users found.'
+        }), 200
+    else:
+        return jsonify({'error': 'No matching users found.'}), 404
+
+
 @app.route('/signup', methods=['POST'])
 def signup():
     user_data = request.get_json()
@@ -82,40 +118,28 @@ def signup():
     else:
         return jsonify({'error': 'Invalid data format.'}), 400
 
-@app.route('/signin', methods=['POST'])
-def signin():
-    user_data = request.get_json()
+@app.route('/upload_profile_pic', methods=['POST'])
+def upload_profile_pic():
+    try:
+        user_id = request.form.get('user_id')
+        last_signin = request.form.get('last_signin')  # Taking last_signin from request
+        profile_pic = request.files.get('profile_pic')
 
-    # Ensure phone number is provided
-    if not user_data or 'phone' not in user_data:
-        return jsonify({'error': 'Phone number is required.'}), 400
+        if not user_id or not last_signin or not profile_pic:
+            return jsonify({'error': 'User ID, last_signin, and profile picture are required.'}), 400
 
-    phone = user_data.get('phone')
+        # Update or insert user profile
+        users_collection.update_one(
+            {'user_id': user_id},
+            {'$set': {'last_signin': last_signin, 'profile_pic': profile_pic.read()}},
+            upsert=True
+        )
 
-    # Get the current timestamp in IST
-    ist_time_zone = pytz.timezone('Asia/Kolkata')
-    current_timestamp = datetime.now(ist_time_zone).isoformat()
+        return jsonify({'success': True, 'message': 'Profile picture updated successfully.'}), 200
 
-    # Search for users whose phone number contains the entered digits
-    matching_users = list(users_collection.find(
-        {'phone': {'$regex': phone, '$options': 'i'}},  # Case-insensitive search
-        {'_id': 0}
-    ))
-
-    if matching_users:
-        # Update `last_signin` only for exact matches
-        # users_collection.update_many(
-        #     {'phone': phone}, {'$set': {'last_signin': current_timestamp}}
-        # )
-
-        return jsonify({
-            'success': True,
-            'users': matching_users,
-            'message': 'Matching users found.'
-        }), 200
-    else:
-        return jsonify({'error': 'No matching users found.'}), 404
-
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+  
 @app.route('/users', methods=['GET'])
 def get_users():
     try:
