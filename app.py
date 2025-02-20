@@ -140,11 +140,18 @@ def upload_profile_pic():
 @app.route('/today_logins', methods=['GET'])
 def today_logins():
     try:
-        start_of_day = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-        end_of_day = datetime.utcnow().replace(hour=23, minute=59, second=59, microsecond=999999)
+        # Get date from request parameters
+        date_str = request.args.get("date", datetime.utcnow().strftime("%Y-%m-%d"))  # Default to today's date
+        selected_date = datetime.strptime(date_str, "%Y-%m-%d")
 
-        today_users = users_collection.find({"last_signin": {"$gte": start_of_day, "$lte": end_of_day}})
-        
+        # Define start and end of the selected date (UTC)
+        start_of_day = selected_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_day = selected_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+        today_users = users_collection.find({
+            "last_signin": {"$gte": start_of_day, "$lte": end_of_day}
+        })
+
         users_list = []
         for user in today_users:
             users_list.append({
@@ -157,7 +164,6 @@ def today_logins():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
 @app.route('/users', methods=['GET'])
 def get_users():
     try:
