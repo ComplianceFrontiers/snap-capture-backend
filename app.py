@@ -117,7 +117,7 @@ def upload_profile_pic():
         user_id = request.form.get('user_id')
         last_signin = request.form.get('last_signin')  # Taking last_signin from request
         profile_pic = request.files.get('profile_pic')
-        signin = request.files.get('signin')
+        signin = True
 
         if not user_id or not last_signin or not profile_pic:
             return jsonify({'error': 'User ID, last_signin, and profile picture are required.'}), 400
