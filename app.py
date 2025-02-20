@@ -4,7 +4,7 @@ from datetime import datetime
 from pymongo import MongoClient,DESCENDING
 from dotenv import load_dotenv
 import os
-import base64
+import base64,random
 
 MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 1
@@ -55,61 +55,33 @@ def signin():
     else:
         return jsonify({'error': 'No matching users found.'}), 404
 
+def generate_unique_user_id():
+    """Generate a unique 6-digit user ID"""
+    while True:
+        user_id = str(random.randint(100000, 999999))  # Generate 6-digit number
+        if not users_collection.find_one({"user_id": user_id}):  # Ensure it's unique
+            return user_id
 
 @app.route('/signup', methods=['POST'])
 def signup():
-    user_data = request.get_json()
-    if user_data:
-        parent_name = user_data.get('parentName')
-        kidnames = [
-            user_data.get('kidName1'),
-            user_data.get('kidName2'),
-            user_data.get('kidName3')
-        ]
-        schoolnames = [
-            user_data.get('schoolName1'),
-            user_data.get('schoolName2'),
-            user_data.get('schoolName3')
-        ]
-        gradenames = [
-            user_data.get('schoolgrade1'),
-            user_data.get('schoolgrade2'),
-            user_data.get('schoolgrade3')
-        ]
-        email = user_data.get('email')
-        phone = user_data.get('phone')
-        
-        # Check if email already exists
-        existing_user = users_collection.find_one({'email': email})
-        if existing_user:
-            return jsonify({'error': 'User already exists. Please login.'}), 400
-        
-        # Handle kid1 specific checks
-        if not kidnames[0]:  # kidName1
-            kidnames[0] = "not a kid"
-        if not schoolnames[0]:  # schoolName1
-            schoolnames[0] = "not a kid"
-        if not gradenames[0]:  # schoolgrade1
-            gradenames[0] = "not a kid"
-        
-        # Insert a record for each kid
-        inserted_ids = []
-        for kidname, schoolname, gradename in zip(kidnames, schoolnames, gradenames):
-            if kidname and schoolname:
-                new_user = {
-                    'parentName': parent_name,
-                    'kidName': kidname,
-                    'schoolName': schoolname,
-                    'gradename': gradename,
-                    'email': email,
-                    'phone': phone,
-                }
-                result = users_collection.insert_one(new_user)
-                inserted_ids.append(str(result.inserted_id))  # Convert ObjectId to string
-        
-        return jsonify({'success': True, 'insertedIds': inserted_ids}), 201
-    else:
-        return jsonify({'error': 'Invalid data format.'}), 400
+    data = request.json
+ 
+    # Generate a unique 6-digit user_id
+    user_id = generate_unique_user_id()
+
+    # Insert new user
+    user_data = {
+        "phone": data["phone"],
+        "email": data["email"],
+        "first_name": data["first_name"],
+        "last_name": data["last_name"],
+        "user_id": user_id,  # Unique 6-digit user ID
+        "last_signin": data["last_signin"],
+        "profile_pic": data.get("profile_pic", ""),
+    }
+    
+    result = users_collection.insert_one(user_data)
+    return jsonify({"message": "Signup successful", "user": result}), 200
 
 @app.route('/upload_profile_pic', methods=['POST'])
 def upload_profile_pic():
