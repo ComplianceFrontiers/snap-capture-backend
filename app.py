@@ -65,11 +65,17 @@ def generate_unique_user_id():
 @app.route('/signup', methods=['POST'])
 def signup():
     data = request.json
- 
-    # Generate a unique 6-digit user_id
+
+    # Validate required fields
+    required_fields = ["phone", "email", "first_name", "last_name", "last_signin"]
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Missing field: {field}"}), 400
+
+    # Generate unique user ID
     user_id = generate_unique_user_id()
 
-    # Insert new user
+    # Prepare user data
     user_data = {
         "phone": data["phone"],
         "email": data["email"],
@@ -79,9 +85,14 @@ def signup():
         "last_signin": data["last_signin"],
         "profile_pic": data.get("profile_pic", ""),
     }
-    
+
+    # Insert new user into MongoDB
     result = users_collection.insert_one(user_data)
-    return jsonify({"message": "Signup successful", "user": result}), 200
+
+    # Fetch inserted user data
+    inserted_user = users_collection.find_one({"_id": result.inserted_id}, {"_id": 0})  # Exclude `_id` field
+
+    return jsonify({"message": "Signup successful", "user": inserted_user}), 200
 
 @app.route('/upload_profile_pic', methods=['POST'])
 def upload_profile_pic():
