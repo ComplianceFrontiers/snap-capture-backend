@@ -139,8 +139,8 @@ def today_logins():
             {
                 "user_id": user["user_id"],
                 "signin": user["signin"],
-                "first_name": user["first_name"],
-                "last_name": user["last_name"],
+                "player_first": user["player_first"],
+                "player_last": user["player_last"],
                 "last_signin": user["last_signin"],
                 "profile_pic": user.get("profile_pic", None)
             }
