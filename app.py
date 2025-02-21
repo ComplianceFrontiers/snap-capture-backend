@@ -72,6 +72,17 @@ def signup():
         if field not in data:
             return jsonify({"error": f"Missing field: {field}"}), 400
 
+    # Check if the player already exists in the database
+    existing_user = users_collection.find_one({
+        "$or": [
+            {"player_first": data["player_first"], "player_last": data["player_last"]},
+            {"phone": data["phone"]},
+            {"email": data["email"]}
+        ]
+    })
+
+    if existing_user:
+            return jsonify({"message": "Signup successful", "user": existing_user}), 200
     # Generate unique user ID
     user_id = generate_unique_user_id()
 
