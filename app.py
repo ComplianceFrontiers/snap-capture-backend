@@ -67,7 +67,7 @@ def signup():
     data = request.json
 
     # Validate required fields
-    required_fields = ["phone", "email", "first_name", "last_name", "last_signin"]
+    required_fields = ["player_first", "player_last", "phone", "email", "last_signin"]
     for field in required_fields:
         if field not in data:
             return jsonify({"error": f"Missing field: {field}"}), 400
@@ -77,13 +77,15 @@ def signup():
 
     # Prepare user data
     user_data = {
+        "player_first": data["player_first"],
+        "player_last": data["player_last"],
         "phone": data["phone"],
         "email": data["email"],
-        "first_name": data["first_name"],
-        "last_name": data["last_name"],
         "user_id": user_id,  # Unique 6-digit user ID
         "last_signin": data["last_signin"],
         "profile_pic": data.get("profile_pic", ""),
+        "parent_first": data.get("parent_first", ""),  # Optional field
+        "parent_last": data.get("parent_last", ""),  # Optional field
     }
 
     # Insert new user into MongoDB
